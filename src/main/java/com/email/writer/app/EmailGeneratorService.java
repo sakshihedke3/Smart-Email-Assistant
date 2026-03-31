@@ -19,39 +19,42 @@ public class EmailGeneratorService {
     @Value("${gemini.api.key}")
     private String geminiApiKey;
 
-    System.out.println("KEY: " + geminiApiKey);
-    System.out.println("URL: " + geminiApiUrl);
-
+    // Constructor
     public EmailGeneratorService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.build();
+
+        // Debug: print keys (optional, remove in production)
+        System.out.println("Gemini API KEY: " + geminiApiKey);
+        System.out.println("Gemini API URL: " + geminiApiUrl);
     }
 
     public String generateEmailReply(EmailRequest emailRequest) {
         // Build the prompt
         String prompt = buildPrompt(emailRequest);
 
-        // Craft a request
+        // Craft the request body
         Map<String, Object> requestBody = Map.of(
-                "contents", new Object[] {
+                "contents", new Object[]{
                         Map.of("parts", new Object[]{
                                 Map.of("text", prompt)
                         })
                 }
         );
 
-        // Do request and get response
+        // Send request to Gemini API
         String response = webClient.post()
-        .uri(geminiApiUrl + "?key=" + geminiApiKey)
-        .header("Content-Type", "application/json")
-        .bodyValue(requestBody)
-        .retrieve()
-        .onStatus(status -> status.isError(), clientResponse ->
-                clientResponse.bodyToMono(String.class)
-                        .map(errorBody -> new RuntimeException("API Error: " + errorBody))
-        )
-        .bodyToMono(String.class)
-        .block();
-        // Extract Response and Return
+                .uri(geminiApiUrl + "?key=" + geminiApiKey)
+                .header("Content-Type", "application/json")
+                .bodyValue(requestBody)
+                .retrieve()
+                .onStatus(status -> status.isError(), clientResponse ->
+                        clientResponse.bodyToMono(String.class)
+                                .map(errorBody -> new RuntimeException("API Error: " + errorBody))
+                )
+                .bodyToMono(String.class)
+                .block();
+
+        // Extract and return the response content
         return extractResponseContent(response);
     }
 
@@ -73,7 +76,7 @@ public class EmailGeneratorService {
 
     private String buildPrompt(EmailRequest emailRequest) {
         StringBuilder prompt = new StringBuilder();
-        prompt.append("Generate a professional email reply for hte following email content. Please don't generate a subject line ");
+        prompt.append("Generate a professional email reply for the following email content. Please don't generate a subject line. ");
         if (emailRequest.getTone() != null && !emailRequest.getTone().isEmpty()) {
             prompt.append("Use a ").append(emailRequest.getTone()).append(" tone.");
         }
