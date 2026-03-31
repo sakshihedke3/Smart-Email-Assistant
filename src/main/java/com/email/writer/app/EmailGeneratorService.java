@@ -38,13 +38,16 @@ public class EmailGeneratorService {
 
         // Do request and get response
         String response = webClient.post()
-                .uri(geminiApiUrl + geminiApiKey)
-                .header("Content-Type","application/json")
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-
+        .uri(geminiApiUrl + "?key=" + geminiApiKey)
+        .header("Content-Type", "application/json")
+        .bodyValue(requestBody)
+        .retrieve()
+        .onStatus(status -> status.isError(), clientResponse ->
+                clientResponse.bodyToMono(String.class)
+                        .map(errorBody -> new RuntimeException("API Error: " + errorBody))
+        )
+        .bodyToMono(String.class)
+        .block();
         // Extract Response and Return
         return extractResponseContent(response);
     }
