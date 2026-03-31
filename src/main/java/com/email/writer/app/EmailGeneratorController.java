@@ -13,18 +13,26 @@ public class EmailGeneratorController {
     private final EmailGeneratorService emailGeneratorService;
 
     @PostMapping("/generate")
-public ResponseEntity<?> generateEmail(@RequestBody EmailRequest emailRequest) {
-    try {
-        System.out.println("🔥 API HIT");
-        System.out.println("EMAIL: " + emailRequest.getEmailContent());
-        System.out.println("TONE: " + emailRequest.getTone());
+    public ResponseEntity<?> generateEmail(@RequestBody EmailRequest emailRequest) {
+        try {
+            // Debug logs to see request in Render logs
+            System.out.println("🔥 API HIT");
+            System.out.println("EMAIL CONTENT: " + emailRequest.getEmailContent());
+            System.out.println("TONE: " + emailRequest.getTone());
 
-        String response = emailGeneratorService.generateEmailReply(emailRequest);
+            // Generate email reply using service
+            String response = emailGeneratorService.generateEmailReply(emailRequest);
 
-        return ResponseEntity.ok(response);
+            // Return success
+            return ResponseEntity.ok(response);
 
-    } catch (Exception e) {
-        e.printStackTrace(); // THIS WILL SHOW IN RENDER LOGS
-        return ResponseEntity.status(500).body(e.getMessage());
+        } catch (Exception e) {
+            // Print stack trace to logs
+            e.printStackTrace();
+
+            // Return 500 with message
+            return ResponseEntity.status(500).body("Failed to generate email reply: " + e.getMessage());
+        }
     }
-}
+
+} // <-- Closing brace for the class
